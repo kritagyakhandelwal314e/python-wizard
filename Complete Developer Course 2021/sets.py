@@ -28,3 +28,11 @@ print(ns.issuperset(s))
 ns.difference_update(s)
 print(ns)
 print(s | ns) # union
+
+'''
+sets can't have mutable data
+test_set = {1, 2, [1, 2], {3}, {
+    'l': 'l'
+}, 'kk'}
+print(test_set)
+'''
