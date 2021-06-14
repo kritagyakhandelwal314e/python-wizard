@@ -1,24 +1,24 @@
 class User():
-  def __init__(self, email):
-    self.email = email
   def sign_in(self):
     print('logged in')
 
+  def attack(self):
+    print('do nothing')
+
 class Wizard(User):
 
-  def __init__(self, name, power, email):
-    User.__init__(self, email)
+  def __init__(self, name, power):
     self.name = name
     self.power = power
   
   def attack(self):
+    User.attack(self)
     print(f'attacking with power of {self.power}')
 
 
 class Archer(User):
 
-  def __init__(self, name, num_arrows, email):
-    super().__init__(email) # with super we don't have to pass self
+  def __init__(self, name, num_arrows):
     self.name = name
     self.num_arrows = num_arrows
   
@@ -29,7 +29,7 @@ class Archer(User):
 def player_attack(char):
   char.attack()
 
-wizard1 = Wizard('kritagya', 100, 'kk@gmail.com')
+wizard1 = Wizard('kritagya', 100)
 print(type(wizard1))
 wizard1.sign_in()
 
@@ -39,9 +39,6 @@ print(isinstance(wizard1, Wizard))
 print(isinstance(wizard1, User))
 print(isinstance(wizard1, object))
 
-archer1 = Archer('yash', 22, 'tt@gmail.com')
+archer1 = Archer('yash', 22)
 player_attack(wizard1)
 player_attack(archer1)
-print(wizard1.email)
-print(archer1.email)
-

@@ -30,18 +30,8 @@ def player_attack(char):
   char.attack()
 
 wizard1 = Wizard('kritagya', 100, 'kk@gmail.com')
-print(type(wizard1))
-wizard1.sign_in()
-
-wizard1.attack()
-
-print(isinstance(wizard1, Wizard))
-print(isinstance(wizard1, User))
-print(isinstance(wizard1, object))
 
 archer1 = Archer('yash', 22, 'tt@gmail.com')
-player_attack(wizard1)
-player_attack(archer1)
-print(wizard1.email)
-print(archer1.email)
 
+for i in dir(wizard1):
+  print(i)
