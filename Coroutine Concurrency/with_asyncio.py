@@ -36,7 +36,8 @@ from time import time
 # returns generator object
 async def search(iterable, predicate):
   for item in iterable:
-    if predicate(item):
+    res = await predicate(item)
+    if res:
       return item
     await asyncio.sleep(0)
   raise ValueError("Not Found")
@@ -62,19 +63,39 @@ async def print_matches(iterable, predicate):
       print("Found :", item)
     await asyncio.sleep(0)
 
-
-
-# scheduler.add(async_print_matches(lucas(), is_prime))
-# scheduler.run_to_completion()
-
 # print a message at intervals
-
 async def repetitive_message(message, interval_seconds):
   while True:
     print(str(time()) + ': ' + message)
     await asyncio.sleep(interval_seconds)
 
-scheduler = asyncio.get_event_loop()
-scheduler.create_task(repetitive_message("Unattended baggage will be destroyed", 2.5))
-scheduler.create_task(print_matches(lucas(), is_prime))
-scheduler.run_forever()
+# scheduler = asyncio.get_event_loop()
+# scheduler.create_task(repetitive_message("Unattended baggage will be destroyed", 2.5))
+# scheduler.create_task(print_matches(lucas(), is_prime))
+# scheduler.run_forever()
+
+async def thirteen_digit_prime(x):
+  return (await is_prime(x)) and len(str(x)) == 13
+
+async def monitored_search(iterable, predicate, future):
+  try:
+    found_item = await search(iterable, predicate)
+  except ValueError as not_found:
+    future.set_exception(not_found)
+  else: # no exception
+    future.set_result(found_item)
+
+async def monitor_future(future, interval_seconds):
+  while not future.done():
+    print('Waiting...')
+    await asyncio.sleep(interval_seconds)
+  print("Done!")
+
+loop = asyncio.get_event_loop()
+future = loop.create_future()
+co_obj = monitored_search(lucas(), thirteen_digit_prime, future)
+loop.create_task(co_obj)
+loop.create_task(monitor_future(future, 1.0))
+loop.run_until_complete(future)
+print(future.result())
+loop.close()
