@@ -11,6 +11,30 @@ from itertools import islice
 
 print(list(islice(lucas(), 10)))
 
+from time import time
+
+def async_sleep(interval_seconds):
+  '''
+    async_sleep always yields atleast once
+    async_sleep(0) yields exactly once
+    Occurrences of bare yield can be replaced with yield from async_sleep(0)
+  '''
+  start = time()
+  expiry = start + interval_seconds
+  while True:
+    yield # Ensure coroutines always yield
+          # at least once if they can't 
+          # complete immediately
+    now = time()
+    if now >= expiry:
+      break
+    '''
+    yield # Subtle bug!
+          # If interval_seconds is very small
+          # the coroutine will never yield
+          # and will hog the system
+    '''
+
 # A linear Search
 def search(iterable, predicate):
   for item in iterable:
@@ -26,7 +50,7 @@ def async_search(iterable, predicate):
   for item in iterable:
     if predicate(item):
       return item
-    yield
+    yield from async_sleep(0)
   raise ValueError("Not Found")
 
 g = async_search(lucas(), lambda x: x > 10)
@@ -67,7 +91,7 @@ class Scheduler:
   def run_to_completion(self):
     while len(self.runnable_tasks) != 0:
       task = self.runnable_tasks.popleft()
-      print(f"Running task {task.id} ... ", end='')
+      # print(f"Running task {task.id} ... ", end='')
       try:
         yielded = next(task.routine)
       except StopIteration as stopped:
@@ -78,7 +102,7 @@ class Scheduler:
         self.failed_tasks_errors[task.id] = e
       else:
         assert yielded is None
-        print("now yielded")
+        # print("now yielded")
         self.runnable_tasks.append(task)
 
 scheduler = Scheduler()
@@ -104,7 +128,7 @@ def async_is_prime(x):
   for i in range(2, int(sqrt(x)) + 1):
     if x % i == 0:
       return False
-    yield
+    yield from async_sleep(0)
   return True
 
 print(is_prime(2))
@@ -116,20 +140,20 @@ def async_print_matches(iterable, predicate):
   for item in iterable:
     if predicate(item):
       print("Found :", item, end=", ")
-    yield
+    yield from async_sleep(0)
 
 def async_print_matches_with_async_predicate(iterable, predicate):
   for item in iterable:
     matches = yield from predicate(item)
     if matches:
-      print("Found :", item, end=", ")
+      print("Found :", item)
 
 
 # scheduler.add(async_print_matches(lucas(), is_prime))
 # scheduler.run_to_completion()
 
 # print a message at intervals
-from time import time
+
 def repetitive_message(message, interval_seconds):
   while True:
     print(message)
@@ -139,25 +163,13 @@ def repetitive_message(message, interval_seconds):
       now = time()
       if now >= expiry:
         break
+
 def async_repetitive_message(message, interval_seconds):
   while True:
-    print(message, end=' ')
-    start = time()
-    expiry = start + interval_seconds
-    while True:
-      yield # Ensure coroutines always yield
-            # at least once if they can't 
-            # complete immediately
-      now = time()
-      if now >= expiry:
-        break
-      '''
-      yield # Subtle bug!
-            # If interval_seconds is very small
-            # the coroutine will never yield
-            # and will hog the system
-      '''
+    print(str(time()) + ': ' + message)
+    yield from async_sleep(interval_seconds)
 
+scheduler = Scheduler()
 scheduler.add(async_repetitive_message("Unattended baggage will be distroyed", 2.5))
 scheduler.add(async_print_matches_with_async_predicate(lucas(), async_is_prime))
 scheduler.run_to_completion()
